@@ -1,6 +1,5 @@
 import random
 
-
 def memoize(f):
     'Add a cache memory to the input function.'
     f.cache = {}
@@ -29,7 +28,8 @@ class BooleanPopulation:
             return '(' + self.create_boolean_expression(depth - 1, vars) + ' ' + random.choice(
                 ['and', 'or']) + ' ' + self.create_boolean_expression(depth - 1, vars) + ')'
 
-    def __create_boolean_function(self, depth, vars):
+
+    def create_boolean_function(self, depth, vars):
         'Create a random Boolean function.'
         expression = self.create_boolean_expression(depth, vars)
         boolean_function = eval('lambda ' + ', '.join(vars) + ': ' + expression)  # create function of n input variables
@@ -37,9 +37,9 @@ class BooleanPopulation:
         boolean_function.genotype = lambda: expression  # store genotype within function
         return boolean_function
 
-    def create_boolean_function_population(self, depth, vars, population_size):
-        'Create population of Boolean functions.'
-        self.population = [self.__create_boolean_function(depth, vars) for _ in range(population_size)]
+    def create_boolean_population(self, depth, vars, population_size):
+        'Create population of Boolean functions.d'
+        self.population = [self.create_boolean_function(depth, vars) for _ in range(population_size)]
 
     def get_boolean_population(self):
         'Return population of Boolean functions.'
@@ -57,6 +57,9 @@ class ArithmeticPopulation:
         else:
             return '(' + self.__create_arithmetic_expression(depth - 1, vars) + ' ' + random.choice(
                 ['+', '-', '/', '*']) + ' ' + self.__create_arithmetic_expression(depth - 1, vars) + ')'
+
+
+
 
     def __create_arithmetic_function(self, depth, vars):
         'Create a random arithmetic function.'
@@ -119,3 +122,4 @@ print([p.genotype() for p in arith.get_arithmetic_population()])
 prog = ProgramPopulation()
 prog.create_program_population(3, vars, 3)
 print([p.genotype() for p in prog.get_program_population()])
+
