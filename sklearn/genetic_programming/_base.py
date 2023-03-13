@@ -58,9 +58,6 @@ class ArithmeticPopulation:
             return '(' + self.__create_arithmetic_expression(depth - 1, vars) + ' ' + random.choice(
                 ['+', '-', '/', '*']) + ' ' + self.__create_arithmetic_expression(depth - 1, vars) + ')'
 
-
-
-
     def __create_arithmetic_function(self, depth, vars):
         'Create a random arithmetic function.'
         expression = self.__create_arithmetic_expression(depth, vars)

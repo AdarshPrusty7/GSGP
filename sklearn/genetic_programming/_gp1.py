@@ -1,31 +1,46 @@
 
 # Author: Adarsh Prusty
 
+import random
+from _base import *
+
+# Boolean Non-Semantic Genetic Operators
 class GeneticProgram:
-    def __init__(self, input_data, output_data, GENERATIONS=10, POPULATION_SIZE=100, NUMVARS) -> None:
-        self.input_data = input_data
-        self.output_data = output_data
-        self.population = []
-        self.GENERATIONS = GENERATIONS
-        self.POPULATION_SIZE = POPULATION_SIZE
-        self.NUMVARS = NUMVARS
-
-    def fitness(self, individual):
-        """Fitness function"""
-        fitness = 0
-        for i in range(len(self.input_data)):
-            if individual(self.input_data[i]) == self.output_data[i]:
-                fitness += 1
-        return fitness
-
-    def selection(self, population):
-        """Roulette Wheel Selection"""
-
-    def crossover(self, population):
+    def __init__(self, numvars, depth, pop_size, generations, trunc, target_output) -> None:
+        self.numvars = numvars
+        self.depth = depth
+        self.pop_size = pop_size
+        self.generations = generations
+        self.trunc = trunc
+        self.target_output = target_output
+        self.vars = []
         pass
 
-    def mutation(self, population):
-        pass
+    def create_vars(self):
+        self.vars = ['x'+str(i) for i in range(self.numvars)]
+
+    def boolean_crossover(self, f1, f2):
+        'Crossover operator.'
+        mask = BooleanPopulation().create_boolean_function(self.depth, self.vars)
+        offspring = lambda *x: (p1(*x) and mask(*x)) or (p2(*x) and not mask(*x))
+        offspring = memoize(offspring)
+        offspring.genotype = lambda: '(('+ f1.genotype(), 'and', mask.genotype() + ') or (' + f2.genotype(), 'and not', mask.genotype() + '))'
+        return offspring
+
+    def mutation(self, f):
+        'Mutation operator.'
+
+        if random.random() < 0.5:
+            pass
+        return f
+
+    def fitness(self, f):
+        'Fitness function.'
+        return f
+
+    def selection(self, f):
+        'Selection operator.'
+        return f
 
     def population_evolution(self):
         """Population Based Evolution"""
@@ -44,58 +59,6 @@ class GeneticProgram:
         return graded_population[0], all_true_individual
 
     def hill_climbing(self):
-        pass
-
-
-
-
-import random
-
-# Boolean Non-Semantic Genetic Operators
-class GeneticProgram:
-    def __init__(self, numvars, depth, pop_size, generations, trunc, target_output) -> None:
-        self.numvars = numvars
-        self.depth = depth
-        self.pop_size = pop_size
-        self.generations = generations
-        self.trunc = trunc
-        self.target_output = target_output
-        self.vars = []
-        pass
-
-    def create_vars(self):
-        self.vars = ['x'+str(i) for i in range(self.numvars)]
-
-    def crossover(self, f1, f2):
-        'Crossover operator.'
-        return f1, f2
-
-    def mutation(self, f):
-        'Mutation operator.'
-        return f
-
-    def fitness(self, f):
-        'Fitness function.'
-        return f
-
-    def selection(self, f):
-        'Selection operator.'
-        return f
-
-    def create_boolean_expression(self, depth):
-        'Create a random Boolean expression using recursion.'
-        if depth == 1 or random.random() < 1.0 / (2 ** depth - 1):
-            return random.choice(self.vars)
-        if random.random() < 1.0 / 3:
-            return 'not' + ' ' + self.create_boolean_expression(depth - 1)
-        pass
-
-    def create_boolean_function(self):
-        'Create a random Boolean function.'
-        pass
-
-    def create_boolean_population(self):
-        'Create initial population of Boolean functions.'
         pass
 
     def run(self):
