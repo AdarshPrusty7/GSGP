@@ -18,6 +18,7 @@ class GeneticProgram:
         self.trunc = trunc
         self.target_funct = target_funct
         self.vars = []
+        self.EXAMPLE_LIST = [random.randint(1,100) for i in range(self.numvars)]
         pass
 
     def create_vars(self):
@@ -81,9 +82,16 @@ class GeneticProgram:
     def real_crossover(self, f1, f2):
         'Crossover operator.'
         mask = ArithmeticPopulation().create_arithmetic_function(self.depth, self.vars)
-        offspring = lambda *x: (f1(*x) * mask(*x)) + (f2(*x) + (1 - mask(*x)))
+        zeroDiv = True
+        while zeroDiv:
+            offspring = lambda *x: (f1(*x) * mask(*x)) + (f2(*x) * (1 - mask(*x)))
+            try:
+                offspring(*self.EXAMPLE_LIST)
+                zeroDiv = False
+            except ZeroDivisionError:
+                mask = ArithmeticPopulation().create_arithmetic_function(self.depth, self.vars)
         offspring = memoize(offspring)
-        offspring.genotype = lambda: '(('+ f1.genotype() + ' and ' + mask.genotype() + ') or (' + f2.genotype() + ' and not ' + mask.genotype() + '))'
+        offspring.genotype = lambda: '(('+ f1.genotype() + ' * ' + mask.genotype() + ') + (' + f2.genotype() + ' * (1 - ' + mask.genotype() + ')))'
         return offspring
 
     def real_mutation(self, f):
@@ -101,8 +109,13 @@ class GeneticProgram:
         generator = random.Random(seed)
         fitness = 0
         # Generate a list
-        combination_list = [[random.random(), random.random()] for i in range(self.numvars)]
+        combination_list = [[random.randint(1,100), random.randint(1,100)] for i in range(self.numvars)]
         for element in itertools.product(*combination_list):
+            # Try to evaluate the function. If zero division error, fitness = 2**numvars
+            try:
+                f(*element)
+            except ZeroDivisionError:
+                return 9999999
             if f(*element) != self.target_funct(*element):
                 fitness += 1
         return fitness
@@ -131,6 +144,61 @@ class GeneticProgram:
         return sorted_population[0][1](*([True] * self.numvars))
 
     #### PROGRAM ####
+    def program_crossover(self, f1, f2):
+        'Crossover operator.'
+        condr = random.randint(0, 1)
+        offspring = lambda *x: f1(*x) if condr else f2(*x) # Ternary operator
+        offspring = memoize(offspring)
+        offspring.genotype = lambda: '(' + f1.genotype() + " if " + condr + " else " + f2.genotype() + ")"
+        return offspring
+
+    def program_mutation(self, f):
+        'Mutation operator.'
+        # Define condr by making it a condition that is true for only a single random set of inputs
+        condr_true = [random.choice([True, False]) for v in self.vars]
+        condr = lambda *x: x == condr_true
+
+        # Define outr
+        outr = random.choice([True, False])
+
+        offspring = lambda *x: outr if condr(*x) else f(*x)
+        offspring = memoize(offspring)
+        offspring.genotype = lambda: '(' + outr + " if " + condr.genotype() + " else " + f.genotype() + ")"
+        return offspring
+
+    def program_fitness(self, f):
+        'Fitness function.'
+        fitness = 0
+        # Generate list of random Boolean inputs
+        fitness = 0
+        combination_list = [[True, False] for i in range(self.numvars)]
+        for element in itertools.product(*combination_list):
+            if f(*element) != self.target_funct(*element):
+                fitness += 1
+        return fitness
+
+
+    def program_population_evolution(self):
+        """Population Based Evolution"""
+        program = ProgramPopulation()
+        population = program.create_program_population(self.depth, self.vars, self.pop_size)
+
+        for generation in range(self.generations):
+            graded_population = [(self.program_fitness(individual), individual) for individual in population]
+            sorted_population = sorted(graded_population, key=lambda x : x[0])
+            print ('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.program_fitness(sorted_population[0][1])) + ' AVERAGE FITNESS: ' + str(sum(individual[0] for individual in graded_population) / self.pop_size))
+            new_parents = sorted_population[:int(self.trunc*self.pop_size)]
+            if generation == self.generations - 1:
+                print("Hmmm")
+                break
+            for i in range(self.pop_size):
+                parent = random.sample(new_parents, 2)
+                population[i] = self.program_mutation(self.program_crossover(parent[0][1], parent[1][1]))
+
+        print ("Best individual in the last population: ")
+        #print (sorted_population[0][1].genotype()) # This takes a while
+        print ("Query best individual in last population with all True inputs:")
+        return sorted_population[0][1](*([True] * self.numvars))
 
 
     def hill_climbing(self):
@@ -144,17 +212,29 @@ class GeneticProgram:
 
 
 def target_funct(*args):
+    """Parity Function Test"""
     return args.count(True) % 2 == 1
 
 def arith_target_funct(*args):
     return sum(args)*2
 
-gp = GeneticProgram(5, 4, 20, 30, 0.5, target_funct)
+            
+
+"""gp = GeneticProgram(5, 4, 20, 30, 0.5, target_funct)
 gp.create_vars()
 gp.boolean_population_evolution()
 
-print("END OF BOOLEAN")
+print("END OF BOOLEAN")"""
 
 arith_gp  = GeneticProgram(5, 4, 20, 30, 0.5, arith_target_funct)
 arith_gp.create_vars()
 arith_gp.real_population_evolution()
+
+print("END OF ARITHMETIC")
+
+"""program_gp = GeneticProgram(5, 4, 20, 30, 0.5, target_funct)
+program_gp.create_vars()
+program_gp.program_population_evolution()
+
+print("END OF PROGRAM")"""
+

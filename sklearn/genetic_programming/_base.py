@@ -44,13 +44,13 @@ class ArithmeticPopulation:
             return random.choice(vars)
         else:
             term = '(' + self.__create_arithmetic_expression(depth - 1, vars) + ' ' + random.choice(
-                ['+', '-', '/', '*']) + ' ' + self.__create_arithmetic_expression(depth - 1, vars) + ')'
+                ['+', '-', '*']) + ' ' + self.__create_arithmetic_expression(depth - 1, vars) + ')'
             try:
                 eval(term, {f"x{i}": i*0.2 for i in range(len(vars))})
                 return term
             except ZeroDivisionError:
                 return '(' + self.__create_arithmetic_expression(depth - 1, vars) + ' ' + random.choice(
-                    ['+', '-', '/', '*']) + ' ' + self.__create_arithmetic_expression(depth - 1, vars) + ')'
+                    ['+', '-', '*']) + ' ' + self.__create_arithmetic_expression(depth - 1, vars) + ')'
 
     def __create_arithmetic_mask_expression(self, depth, original_depth):
         'Create a random arithmetic mask expression using recursion.'
@@ -61,14 +61,14 @@ class ArithmeticPopulation:
                 eval_term = 2
                 term = 0
                 while eval_term < 0 or eval_term > 1:
-                    term = '(' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ' ' + random.choice(['+', '-', '/', '*']) + ' ' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ')'
+                    term = '(' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ' ' + random.choice(['+', '-', '*']) + ' ' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ')'
                     try:
                         eval_term = eval(term)
                     except ZeroDivisionError:
                         eval_term = 2 
                 return term
             else:
-                return '(' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ' ' + random.choice(['+', '-', '/', '*']) + ' ' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ')'
+                return '(' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ' ' + random.choice(['+', '-', '*']) + ' ' + self.__create_arithmetic_mask_expression(depth - 1, original_depth) + ')'
 
     def create_arithmetic_function(self, depth, vars):
         'Create a random arithmetic function.'
