@@ -81,24 +81,17 @@ class GeneticProgram:
     #### REAL ####
     def real_crossover(self, f1, f2):
         'Crossover operator.'
-        mask = ArithmeticPopulation().create_arithmetic_function(self.depth, self.vars)
-        zeroDiv = True
-        while zeroDiv:
-            offspring = lambda *x: (f1(*x) * mask(*x)) + (f2(*x) * (1 - mask(*x)))
-            try:
-                offspring(*self.EXAMPLE_LIST)
-                zeroDiv = False
-            except ZeroDivisionError:
-                mask = ArithmeticPopulation().create_arithmetic_function(self.depth, self.vars)
+        mask = ArithmeticPopulation().create_arithmetic_function()
+        offspring = lambda *x: (f1(*x) * mask(*x)) + (f2(*x) * (1 - mask(*x)))
         offspring = memoize(offspring)
         offspring.genotype = lambda: '(('+ f1.genotype() + ' * ' + mask.genotype() + ') + (' + f2.genotype() + ' * (1 - ' + mask.genotype() + ')))'
         return offspring
 
     def real_mutation(self, f):
         'Mutation operator.'
-        mutation_step = random.random()
-        random_arithmetic_1 = ArithmeticPopulation().create_arithmetic_function(self.depth, self.vars)
-        random_arithmetic_2 = ArithmeticPopulation().create_arithmetic_function(self.depth, self.vars)
+        mutation_step = 0.001
+        random_arithmetic_1 = ArithmeticPopulation().create_arithmetic_function()
+        random_arithmetic_2 = ArithmeticPopulation().create_arithmetic_function()
         offspring = lambda *x : f(*x) + mutation_step * (random_arithmetic_1(*x) - random_arithmetic_2(*x))
         offspring = memoize(offspring)
         offspring.genotype = lambda: '(' + f.genotype() + ' + ' + str(mutation_step) + ' * (' + random_arithmetic_1.genotype() + ' - ' + random_arithmetic_2.genotype() + '))'
@@ -108,22 +101,19 @@ class GeneticProgram:
         'Fitness function.'
         generator = random.Random(seed)
         fitness = 0
-        # Generate a list
-        combination_list = [[random.randint(1,100), random.randint(1,100)] for i in range(self.numvars)]
-        for element in itertools.product(*combination_list):
-            # Try to evaluate the function. If zero division error, fitness = 2**numvars
-            try:
-                f(*element)
-            except ZeroDivisionError:
-                return 9999999
-            if f(*element) != self.target_funct(*element):
-                fitness += 1
-        return fitness
+        # Euclidean distance to output vector of target function on 20 inputs in [-1, 1]
+        input_list = [generator.uniform(-1, 1) for i in range(20)]
+        f_output = [f(i) for i in input_list]
+        target_output = [self.target_funct(i) for i in input_list]
+        # Calculate Euclidean distance
+        for i in range(len(f_output)):
+            fitness += (f_output[i] - target_output[i])**2
+        return math.sqrt(fitness)
 
     def real_population_evolution(self):
         """Population Based Evolution"""
         arith = ArithmeticPopulation()
-        population = arith.create_arithmetic_population(self.depth, self.vars, self.pop_size)
+        population = arith.create_arithmetic_population(self.pop_size)
         seed = random.randint(0, 10000000)
 
         for generation in range(self.generations):
@@ -140,8 +130,8 @@ class GeneticProgram:
 
         print ("Best individual in the last population: ")
         #print (sorted_population[0][1].genotype()) # This takes a while
-        print ("Query best individual in last population with all True inputs:")
-        return sorted_population[0][1](*([True] * self.numvars))
+        print ("Query best individual in last population with one input:")
+        return sorted_population[0][1](0)
 
     #### PROGRAM ####
     def program_crossover(self, f1, f2):
@@ -216,9 +206,10 @@ def target_funct(*args):
     return args.count(True) % 2 == 1
 
 def arith_target_funct(*args):
-    return sum(args)*2
+    return 1 + 2 * args[0] + 3 * args[0]**2 + 4 * args[0]**3
 
-            
+def program_target_funct(*args):
+    return ((args[0] + args[1]) % ncl) + 1
 
 """gp = GeneticProgram(5, 4, 20, 30, 0.5, target_funct)
 gp.create_vars()
@@ -226,15 +217,16 @@ gp.boolean_population_evolution()
 
 print("END OF BOOLEAN")"""
 
-arith_gp  = GeneticProgram(5, 4, 20, 30, 0.5, arith_target_funct)
+"""arith_gp  = GeneticProgram(1, 4, 20, 30, 0.5, arith_target_funct)
 arith_gp.create_vars()
-arith_gp.real_population_evolution()
+print(arith_gp.real_population_evolution(), arith_target_funct(1))
 
-print("END OF ARITHMETIC")
+print("END OF ARITHMETIC")"""
 
-"""program_gp = GeneticProgram(5, 4, 20, 30, 0.5, target_funct)
+nc, nv, ncl = 3, 3, 2
+program_gp = GeneticProgram(nc, 4, 20, 30, 0.5, program_target_funct)
 program_gp.create_vars()
 program_gp.program_population_evolution()
 
-print("END OF PROGRAM")"""
+print("END OF PROGRAM")
 
