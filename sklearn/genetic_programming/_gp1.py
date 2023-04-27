@@ -1,4 +1,3 @@
-
 # Author: Adarsh Prusty
 
 from _base import *
@@ -6,6 +5,8 @@ from _base import *
 import itertools
 import math
 import random
+
+from inspect import getfullargspec
 
 
 # Boolean Non-Semantic Genetic Operators
@@ -139,44 +140,51 @@ class GeneticProgram:
         condr = random.randint(0, 1)
         offspring = lambda *x: f1(*x) if condr else f2(*x) # Ternary operator
         offspring = memoize(offspring)
-        offspring.genotype = lambda: '(' + f1.genotype() + " if " + condr + " else " + f2.genotype() + ")"
+        offspring.genotype = lambda: '(' + f1.genotype() + " if " + str(condr) + " else " + f2.genotype() + ")"
         return offspring
+
 
     def program_mutation(self, f):
         'Mutation operator.'
         # Define condr by making it a condition that is true for only a single random set of inputs
-        condr_true = [random.choice([True, False]) for v in self.vars]
-        condr = lambda *x: x == condr_true
+        condr_true = [random.randint(1, nc) for _ in range(nv)]
+        condr_expression = "(1 if " + "[" + ", ".join(["x[" + i[1:] + "]" for i in self.vars]) + "]"  " == " + str(condr_true) + " else 0)"
+        condr = eval("lambda *x: " + condr_expression)
+        #condr.expression = lambda: "(1 if " + "[" + ", ".join(["x[" + i[1:] + "]" for i in self.vars]) + "]"  " == " + str(condr_true) + " else 0)"
+        #condr = random.randint(0, 1)
 
-        # Define outr
-        outr = random.choice([True, False])
+        # Define outr, which is a random member of OS
+        outr = random.choice(OS)
 
         offspring = lambda *x: outr if condr(*x) else f(*x)
         offspring = memoize(offspring)
-        offspring.genotype = lambda: '(' + outr + " if " + condr.genotype() + " else " + f.genotype() + ")"
+        offspring.genotype = lambda: '(' + str(outr) + " if " + condr_expression + " else " + f.genotype() + ")"
         return offspring
 
-    def program_fitness(self, f):
+    def program_fitness(self, f, seed):
         'Fitness function.'
-        fitness = 0
+        generator = random.Random(seed)
         # Generate list of random Boolean inputs
         fitness = 0
-        combination_list = [[True, False] for i in range(self.numvars)]
-        for element in itertools.product(*combination_list):
-            if f(*element) != self.target_funct(*element):
+        combination_list = [[generator.randint(1, nc), generator.randint(1, nc), generator.randint(1, nc)] for i in range(self.numvars)]
+        f_output = [f(*element) for element in itertools.product(*combination_list)]
+        target_output = [self.target_funct(*element) for element in itertools.product(*combination_list)]
+        # Calculate Hamming distance
+        for i in range(len(f_output)):
+            if f_output[i] != target_output[i]:
                 fitness += 1
         return fitness
-
 
     def program_population_evolution(self):
         """Population Based Evolution"""
         program = ProgramPopulation()
         population = program.create_program_population(self.depth, self.vars, self.pop_size)
+        seed = random.randint(0, 10000000)
 
         for generation in range(self.generations):
-            graded_population = [(self.program_fitness(individual), individual) for individual in population]
+            graded_population = [(self.program_fitness(individual, seed), individual) for individual in population]
             sorted_population = sorted(graded_population, key=lambda x : x[0])
-            print ('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.program_fitness(sorted_population[0][1])) + ' AVERAGE FITNESS: ' + str(sum(individual[0] for individual in graded_population) / self.pop_size))
+            print ('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.program_fitness(sorted_population[0][1], seed)) + ' AVERAGE FITNESS: ' + str(sum(individual[0] for individual in graded_population) / self.pop_size))
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
             if generation == self.generations - 1:
                 print("Hmmm")
@@ -217,16 +225,18 @@ gp.boolean_population_evolution()
 
 print("END OF BOOLEAN")"""
 
-"""arith_gp  = GeneticProgram(1, 4, 20, 30, 0.5, arith_target_funct)
+arith_gp  = GeneticProgram(1, 4, 20, 50, 0.5, arith_target_funct)
 arith_gp.create_vars()
 print(arith_gp.real_population_evolution(), arith_target_funct(1))
 
-print("END OF ARITHMETIC")"""
+print("END OF ARITHMETIC")
 
-nc, nv, ncl = 3, 3, 2
-program_gp = GeneticProgram(nc, 4, 20, 30, 0.5, program_target_funct)
+"""nc, nv, ncl = 3, 3, 4
+IS = [i for i in range(1, nc + 1)]
+OS = [i for i in range(1, ncl + 1)]
+program_gp = GeneticProgram(nc, 4, 100, 25, 0.5, program_target_funct)
 program_gp.create_vars()
 program_gp.program_population_evolution()
 
-print("END OF PROGRAM")
+print("END OF PROGRAM")"""
 

@@ -65,7 +65,7 @@ class ProgramPopulation:
         if depth == 1 or random.random() < 1.0 / (2 ** depth - 1):
             return random.choice(vars)
         else:
-            return '(' + self.__create_program_expression(depth - 1, vars) + ' if ' + self.__create_program_expression(depth - 1, vars) + ' else ' + self.__create_program_expression(depth - 1, vars) + ')'
+            return '(' + self.__create_program_expression(depth - 1, vars) + ' if ' + random.choice(['0', '1']) + ' else ' + self.__create_program_expression(depth - 1, vars) + ')'
 
     def __create_program_function(self, depth, vars):
         'Create a random program function.'
