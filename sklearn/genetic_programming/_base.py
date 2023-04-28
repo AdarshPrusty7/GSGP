@@ -43,13 +43,13 @@ class ArithmeticPopulation:
         expression = ''
         for i in range(3):
             # generate real number between -1 and 1
-            expression += str(str(random.uniform(-1, 1)) + ' * x ** ' + str(i) + str(random.choice([' + ',' - ' ])))
+            expression += str(random.uniform(-1, 1)) + ' * x ** ' + str(i) + str(random.choice([' + ',' - ' ]))
         return expression[:-3]
 
     def create_arithmetic_function(self):
         'Create a random arithmetic function.'
         expression = self.__create_arithmetic_expression()
-        arithmetic_function = eval('lambda x'  + ': ' + expression)  # create function of n input variables
+        arithmetic_function = eval('lambda x: ' + expression)  # create function of n input variables
         arithmetic_function = memoize(arithmetic_function)  # add cache to the function
         arithmetic_function.genotype = lambda: expression  # store genotype within function
         return arithmetic_function
