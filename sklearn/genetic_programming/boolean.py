@@ -36,7 +36,7 @@ class BooleanGSGP:
         self.target_funct = target_funct
         self.vars = []
 
-    def create_vars(self):
+    def create_vars(self) -> None:
         """Creates the variables that the functions will take as input, in the format of x0, x1, x2, ..., xn.
 
         Examples
@@ -163,8 +163,6 @@ class BooleanGSGP:
                                  for individual in population]
             # sorted population by its fitness
             sorted_population = sorted(graded_population, key=lambda x : x[0])
-            print('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.boolean_fitness(
-                sorted_population[0][1])) + ' AVERAGE FITNESS: ' + str(sum(individual[0] for individual in graded_population) / self.pop_size))
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
             if generation == self.generations - 1:
                 break
