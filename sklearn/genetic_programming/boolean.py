@@ -1,17 +1,33 @@
 # Author: Adarsh Prusty
 
+import itertools
+import random
+from typing import Callable
+
 from _base import BooleanPopulation, memoize
 
-import itertools
-import math
-import random
 
-from inspect import getfullargspec
+class BooleanGSGP:
+    """A class that implements the Geometric Semantic Genetic Programming algorithm for the Boolean domain."""
 
+    def __init__(self, numvars: int, depth: int, pop_size: int, generations: int, trunc: float, target_funct: Callable) -> None:
+        """Initializes an instance of the BooleanGSGP class.
 
-# Boolean Semantic Genetic Operators
-class GeneticProgram:
-    def __init__(self, numvars, depth, pop_size, generations, trunc, target_funct) -> None:
+        Parameters
+        ----------
+        numvars : int
+            The number of variables that the functions will take as input.
+        depth : int
+            The maximum depth of the functions.
+        pop_size : int
+            The size of the population.
+        generations : int
+            The number of generations that the algorithm will run for.
+        trunc : float
+            The truncation value that is used when selecting the best individuals.
+        target_funct : Callable
+            The target function that the algorithm will try to approximate.
+        """
         self.numvars = numvars
         self.depth = depth
         self.pop_size = pop_size
@@ -21,20 +37,69 @@ class GeneticProgram:
         self.vars = []
 
     def create_vars(self):
+        """Creates the variables that the functions will take as input, in the format of x0, x1, x2, ..., xn.
+
+        Examples
+        ------
+        >>> self.numvars = 6
+        >>> create_vars()
+        >>> self.vars
+        ['x0', 'x1', 'x2', 'x3', 'x4', 'x5']
+        """
         self.vars = ['x'+str(i) for i in range(self.numvars)]
 
     #### BOOLEAN ####
-    def boolean_crossover(self, f1, f2):
-        'Crossover operator.'
+    def boolean_crossover(self, f1: Callable, f2: Callable) -> Callable:
+        """Crossover operator. Given f1 and f2, offspring is returned in the format of ((f1 and mask) or (f2 and not mask)).
+
+        Parameters
+        ----------
+        f1 : Callable
+            A parent function.
+        f2 : Callable
+            A parent function.
+
+        Returns
+        -------
+        offspring : Callable
+            The new function that is the result of the crossover operation on f1 and f2.
+
+        Examples
+        ------
+        >>> f1 = lambda x: x
+        >>> f2 = lambda x: not x
+        >>> offspring = boolean_crossover(f1, f2)
+        >>> offspring.genotype()
+        '(x and (not x)) or ((not x) and not (not x))'
+        """
         mask = BooleanPopulation().create_boolean_function(self.depth, self.vars)
         offspring = lambda *x: (f1(*x) and mask(*x)) or (f2(*x) and not mask(*x))
         offspring = memoize(offspring)
-        offspring.genotype = lambda: '(('+ f1.genotype() + ' and ' + mask.genotype() + ') or (' + f2.genotype() + ' and not ' + mask.genotype() + '))'
+        offspring.genotype = lambda: '((' + f1.genotype() + ' and ' + mask.genotype(
+        ) + ') or (' + f2.genotype() + ' and not ' + mask.genotype() + '))'
         return offspring
 
-    def boolean_mutation(self, f):
-        'Mutation operator.'
-        mintermexpr = ' and '.join([random.choice([x,'not ' + x]) for x in self.vars]) 
+    def boolean_mutation(self, f: Callable) -> Callable:
+        """The mutation operator. Given f, offspring is returned in the format of (f or minterm) or (f and not minterm).
+
+        Parameters
+        ----------
+        f : Callable
+            The parent function.
+
+        Returns
+        -------
+        offspring : Callable
+            The new function that is the result of the mutation operation on f.
+
+        Examples
+        ------
+        >>> f = lambda x: x
+        >>> offspring = boolean_mutation(f)
+        >>> offspring.genotype()
+        '(x or (not x)) or (x and not (not x))'
+        """
+        mintermexpr = ' and '.join([random.choice([x, 'not ' + x]) for x in self.vars])
         minterm = eval('lambda ' + ', '.join(self.vars) + ': ' + mintermexpr)
         if random.random() < 0.5:
             offspring = lambda *x : f(*x) or minterm(*x)
@@ -43,11 +108,30 @@ class GeneticProgram:
         else:
             offspring = lambda *x: f(*x) and not minterm(*x)
             offspring = memoize(offspring)
-            offspring.genotype = lambda: '(' + f.genotype() + ' and not ' + mintermexpr + ')'
+            offspring.genotype = lambda: '(' + f.genotype() + \
+                ' and not ' + mintermexpr + ')'
         return offspring
 
-    def boolean_fitness(self, f):
-        'Fitness function.'
+    def boolean_fitness(self, f: Callable) -> int:
+        """The fitness function. Given f, the hamming distance of f and the target function is returned.
+
+        Parameters
+        ----------
+        f : Callable
+            The function that will be evaluated.
+
+        Returns
+        -------
+        fitness : int
+            The hamming distance of f and the target function.
+
+        Examples
+        ------
+        >>> self.target_funct = lambda x: x
+        >>> f = lambda x: x
+        >>> self.boolean_fitness(f)
+        0
+        """
         fitness = 0
         combination_list = [[True, False] for i in range(self.numvars)]
         for element in itertools.product(*combination_list):
@@ -55,69 +139,61 @@ class GeneticProgram:
                 fitness += 1
         return fitness
 
-    def boolean_population_evolution(self):
-        """Population Based Evolution"""
-        bool = BooleanPopulation()
-        population = bool.create_boolean_population(self.depth, self.vars, self.pop_size)
+    def population_evolution(self) -> Callable:
+        """The population-based evolution loop for the Boolean domain. Returns the fittest function in the final population.
 
+
+        Returns
+        -------
+        fittest_function : Callable
+            The fittest function in the final population.
+
+        Examples
+        ------
+        >>> bp = BooleanGSGP(6, 6, 100, 1, 0.5, lambda x: x)
+        >>> fittest_function = bp.population_evolution()
+        >>> fittest_function.genotype()
+        '(x0 and (not x1)) or ((not x0) and x1)'
+        """
+        bool = BooleanPopulation()
+        population = bool.create_boolean_population(
+            self.depth, self.vars, self.pop_size)
         for generation in range(self.generations):
-            graded_population = [(self.boolean_fitness(individual), individual) for individual in population]
-            sorted_population = sorted(graded_population, key=lambda x : x[0]) # sorted population by its fitness
-            print ('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.boolean_fitness(sorted_population[0][1])) + ' AVERAGE FITNESS: ' + str(sum(individual[0] for individual in graded_population) / self.pop_size))
+            graded_population = [(self.boolean_fitness(individual), individual)
+                                 for individual in population]
+            # sorted population by its fitness
+            sorted_population = sorted(graded_population, key=lambda x : x[0])
+            print('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.boolean_fitness(
+                sorted_population[0][1])) + ' AVERAGE FITNESS: ' + str(sum(individual[0] for individual in graded_population) / self.pop_size))
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
             if generation == self.generations - 1:
-                print("Hmmm")
                 break
             for i in range(self.pop_size):
-                parent = random.sample(new_parents, 2) # picks two random parents
-                population[i] = self.boolean_mutation(self.boolean_crossover(parent[0][1], parent[1][1]))
-        
-        print ("Best individual in the last population: ")
-        #print (sorted_population[0][1].genotype()) # This takes a while
-        print ("Query best individual in last population with all True inputs:")
-        print (sorted_population[0][1](*([True] * self.numvars)))
+                parent = random.sample(new_parents, 2)  # picks two random parents
+                population[i] = self.boolean_mutation(
+                    self.boolean_crossover(parent[0][1], parent[1][1]))
+        return sorted_population[0][1]
 
-    
+    def hill_climbing(self) -> Callable:
+        """The main function for the hill climbing algorithm. Returns the fittest function.
 
+        Returns
+        -------
+        fittest_function : Callable
+            The fittest function.
 
-    def hill_climbing(self):
-        pass
-
-    def run(self):
-        'Run the genetic program.'
-        # Create initial population
-        pass
-
-
-
-def target_funct(*args):
-    """Parity Function Test"""
-    return args.count(True) % 2 == 1
-
-def arith_target_funct(arg):
-    return arg**2 + 1
-
-def program_target_funct(*args):
-    return ((args[0] + args[1]) % ncl) + 1
-
-"""gp = GeneticProgram(5, 4, 20, 30, 0.5, target_funct)
-gp.create_vars()
-gp.boolean_population_evolution()
-
-print("END OF BOOLEAN")"""
-
-arith_gp  = GeneticProgram(1, 4, 100, 30, 0.5, arith_target_funct)
-arith_gp.create_vars()
-print(arith_gp.real_population_evolution(), arith_target_funct(0))
-
-print("END OF ARITHMETIC")
-
-"""nc, nv, ncl = 3, 3, 4
-IS = [i for i in range(1, nc + 1)]
-OS = [i for i in range(1, ncl + 1)]
-program_gp = GeneticProgram(nc, 4, 100, 25, 0.5, program_target_funct)
-program_gp.create_vars()
-program_gp.program_population_evolution()
-
-print("END OF PROGRAM")"""
-
+        Examples
+        ------
+        >>> bp = BooleanGSGP(6, 6, 100, 1, 0.5, lambda x: x)
+        >>> fittest_function = bp.hill_climbing()
+        >>> fittest_function.genotype()
+        '(x0 and (not x1)) or ((not x0) and x1)'
+        """
+        current = BooleanPopulation().create_boolean_function(self.depth, self.vars)
+        current.fitness = self.boolean_fitness(current)
+        for _ in range(self.generations + 1):
+            offspring = self.boolean_mutation(current)
+            offspring.fitness = self.boolean_fitness(offspring)
+            if offspring.fitness < current.fitness:
+                current = offspring
+        return current

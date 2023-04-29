@@ -184,11 +184,9 @@ class ArithmeticGSGP:
         seed = random.randint(0, 10000000)
         current = ArithmeticPopulation().create_arithmetic_function(self.polynomial_degree)
         current.fitness = self.real_fitness(current, seed)
-
         for _ in range(self.generations + 1):
             offspring = self.real_mutation(current)
             offspring.fitness = self.real_fitness(offspring, seed)
             if offspring.fitness < current.fitness:
                 current = offspring
-
         return current
