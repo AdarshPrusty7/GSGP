@@ -18,5 +18,9 @@ import _arithmetic
 import _boolean
 import _program
 
-__all__ = ['_base', '_arithmetic', '_boolean', '_program']
+import tests
 
+__all__ = ['_base', 
+           '_arithmetic', 
+           '_boolean', 
+           '_program']

@@ -97,6 +97,7 @@ else:
         "feature_extraction",
         "feature_selection",
         "gaussian_process",
+        "genetic_programming",
         "inspection",
         "isotonic",
         "kernel_approximation",
