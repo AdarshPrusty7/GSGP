@@ -1,13 +1,10 @@
-import pytest
-import sys
 from typing import Callable, List
 
-from .._base import memoize
-from .._base import BooleanPopulation
-from .._base import ArithmeticPopulation
-from .._base import ProgramPopulation
+from .._base import (ArithmeticPopulation, BooleanPopulation,
+                     ProgramPopulation, memoize)
 
-# We seperate these tests into individual unit tests and whole population tests.
+# Tests made to be run with pytest
+
 # UNIT TESTS
 
 def test_memoize():
@@ -129,4 +126,3 @@ class TestProgramPopulation:
             assert isinstance(p, Callable)
             assert isinstance(p.genotype(), str)
             assert p(1, 2, 3) in [1, 2, 3]
-            

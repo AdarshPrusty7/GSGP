@@ -35,7 +35,7 @@ class ArithmeticGSGP:
         self.target_funct = target_funct
         self.mutation_step = mutation_step
 
-    def real_crossover(self, f1: Callable, f2: Callable) -> Callable:
+    def crossover(self, f1: Callable, f2: Callable) -> Callable:
         """Crossover operator. Given f1 and f2, offspring is returned in the format of (f1 * mask) + (f2 * (1 - mask)).
 
         Parameters
@@ -60,14 +60,14 @@ class ArithmeticGSGP:
         >>> offspring(2)
         0.0
         """
-        mask = ArithmeticPopulation().create_arithmetic_function()
+        mask = ArithmeticPopulation().create_arithmetic_function(self.polynomial_degree)
         offspring = lambda x: (f1(x) * mask(x)) + (f2(x) * (1 - mask(x)))
         offspring = memoize(offspring)
         offspring.genotype = lambda: '((' + f1.genotype() + ' * ' + mask.genotype(
         ) + ') + (' + f2.genotype() + ' * (1 - ' + mask.genotype() + ')))'
         return offspring
 
-    def real_mutation(self, f: Callable) -> Callable:
+    def mutation(self, f: Callable) -> Callable:
         """Mutation operator. Given f, offspring is returned in the format of f + mutation_step * (random_arithmetic_1 - random_arithmetic_2).
 
         Parameters
@@ -100,7 +100,7 @@ class ArithmeticGSGP:
             ' - ' + random_arithmetic_2.genotype() + '))'
         return offspring
 
-    def real_fitness(self, f: Callable, seed: int) -> float:
+    def fitness(self, f: Callable, seed: int) -> float:
         """Fitness function. Given f and a seed, the fitness of f is represented by the Euclidean distance between f and the target function on 20 inputs in [-1, 1].
 
         Parameters
@@ -148,11 +148,11 @@ class ArithmeticGSGP:
         '(((x**2 * (0.5 + x**2)) + (x**3 * (1 - (0.5 + x**2)))) + 0.001 * ((x + x**2) - (x + 0.5 * x**2)))'
         """
         arith = ArithmeticPopulation()
-        population = arith.create_arithmetic_population(self.pop_size)
+        population = arith.create_arithmetic_population(self.polynomial_degree, self.pop_size)
         seed = random.randint(0, 10000000)
 
         for generation in range(self.generations):
-            graded_population = [(self.real_fitness(individual, seed), individual)
+            graded_population = [(self.fitness(individual, seed), individual)
                                  for individual in population]
             sorted_population = sorted(graded_population, key=lambda x : x[0])
             # print('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.real_fitness(
@@ -162,8 +162,8 @@ class ArithmeticGSGP:
                 break
             for i in range(self.pop_size):
                 parent = random.sample(new_parents, 2)
-                population[i] = self.real_mutation(
-                    self.real_crossover(parent[0][1], parent[1][1]))
+                population[i] = self.mutation(
+                    self.crossover(parent[0][1], parent[1][1]))
 
         return sorted_population[0][1]
 
@@ -183,10 +183,10 @@ class ArithmeticGSGP:
         """
         seed = random.randint(0, 10000000)
         current = ArithmeticPopulation().create_arithmetic_function(self.polynomial_degree)
-        current.fitness = self.real_fitness(current, seed)
+        current.fitness = self.fitness(current, seed)
         for _ in range(self.generations + 1):
-            offspring = self.real_mutation(current)
-            offspring.fitness = self.real_fitness(offspring, seed)
+            offspring = self.mutation(current)
+            offspring.fitness = self.fitness(offspring, seed)
             if offspring.fitness < current.fitness:
                 current = offspring
         return current

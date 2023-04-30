@@ -34,22 +34,23 @@ class BooleanGSGP:
         self.generations = generations
         self.trunc = trunc
         self.target_funct = target_funct
-        self.vars = []
+        self.vars = None
+        self.__create_vars()
 
-    def create_vars(self) -> None:
+    def __create_vars(self) -> None:
         """Creates the variables that the functions will take as input, in the format of x0, x1, x2, ..., xn.
 
         Examples
         ------
         >>> self.numvars = 6
-        >>> create_vars()
+        >>> __create_vars()
         >>> self.vars
         ['x0', 'x1', 'x2', 'x3', 'x4', 'x5']
         """
         self.vars = ['x'+str(i) for i in range(self.numvars)]
 
     #### BOOLEAN ####
-    def boolean_crossover(self, f1: Callable, f2: Callable) -> Callable:
+    def crossover(self, f1: Callable, f2: Callable) -> Callable:
         """Crossover operator. Given f1 and f2, offspring is returned in the format of ((f1 and mask) or (f2 and not mask)).
 
         Parameters
@@ -79,7 +80,7 @@ class BooleanGSGP:
         ) + ') or (' + f2.genotype() + ' and not ' + mask.genotype() + '))'
         return offspring
 
-    def boolean_mutation(self, f: Callable) -> Callable:
+    def mutation(self, f: Callable) -> Callable:
         """The mutation operator. Given f, offspring is returned in the format of (f or minterm) or (f and not minterm).
 
         Parameters
@@ -112,7 +113,7 @@ class BooleanGSGP:
                 ' and not ' + mintermexpr + ')'
         return offspring
 
-    def boolean_fitness(self, f: Callable) -> int:
+    def fitness(self, f: Callable) -> int:
         """The fitness function. Given f, the hamming distance of f and the target function is returned.
 
         Parameters
@@ -131,6 +132,7 @@ class BooleanGSGP:
         >>> f = lambda x: x
         >>> self.boolean_fitness(f)
         0
+        >>> # The fitness is 0 because f and the target function are the same.
         """
         fitness = 0
         combination_list = [[True, False] for i in range(self.numvars)]
@@ -159,7 +161,7 @@ class BooleanGSGP:
         population = bool.create_boolean_population(
             self.depth, self.vars, self.pop_size)
         for generation in range(self.generations):
-            graded_population = [(self.boolean_fitness(individual), individual)
+            graded_population = [(self.fitness(individual), individual)
                                  for individual in population]
             # sorted population by its fitness
             sorted_population = sorted(graded_population, key=lambda x : x[0])
@@ -168,8 +170,8 @@ class BooleanGSGP:
                 break
             for i in range(self.pop_size):
                 parent = random.sample(new_parents, 2)  # picks two random parents
-                population[i] = self.boolean_mutation(
-                    self.boolean_crossover(parent[0][1], parent[1][1]))
+                population[i] = self.mutation(
+                    self.crossover(parent[0][1], parent[1][1]))
         return sorted_population[0][1]
 
     def hill_climbing(self) -> Callable:
@@ -188,10 +190,10 @@ class BooleanGSGP:
         '(x0 and (not x1)) or ((not x0) and x1)'
         """
         current = BooleanPopulation().create_boolean_function(self.depth, self.vars)
-        current.fitness = self.boolean_fitness(current)
+        current.fitness = self.fitness(current)
         for _ in range(self.generations + 1):
-            offspring = self.boolean_mutation(current)
-            offspring.fitness = self.boolean_fitness(offspring)
+            offspring = self.mutation(current)
+            offspring.fitness = self.fitness(offspring)
             if offspring.fitness < current.fitness:
                 current = offspring
         return current

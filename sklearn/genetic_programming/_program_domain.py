@@ -36,21 +36,22 @@ class ProgramGSGP:
         self.generations = generations
         self.trunc = trunc
         self.target_funct = target_funct
-        self.vars = []
+        self.vars = None
+        self.__create_vars()
 
-    def create_vars(self) -> None:
+    def __create_vars(self) -> None:
         """Creates the variables that the functions will take as input, in the format of x0, x1, x2, ..., xn.
 
         Examples
         ------
         >>> self.nv = 6
-        >>> create_vars()
+        >>> __create_vars()
         >>> self.vars
         ['x0', 'x1', 'x2', 'x3', 'x4', 'x5']
         """
         self.vars = ['x'+str(i) for i in range(self.nc)]
 
-    def program_crossover(self, f1: Callable, f2: Callable) -> Callable:
+    def crossover(self, f1: Callable, f2: Callable) -> Callable:
         """Crossover operator. Given f1 and f2, offspring is returned in the format of (f1 if condr else f2).
 
         Parameters
@@ -80,7 +81,7 @@ class ProgramGSGP:
             " if " + str(condr) + " else " + f2.genotype() + ")"
         return offspring
 
-    def program_mutation(self, f: Callable) -> Callable:
+    def mutation(self, f: Callable) -> Callable:
         """Mutation operator. Given f, offspring is returned in the format of (outr if condr else f).
 
         Parameters
@@ -114,7 +115,7 @@ class ProgramGSGP:
             condr_expression + " else " + f.genotype() + ")"
         return offspring
 
-    def program_fitness(self, f: Callable, seed: int):
+    def fitness(self, f: Callable, seed: int):
         """_summary_
 
         Parameters
@@ -172,16 +173,17 @@ class ProgramGSGP:
             self.depth, self.vars, self.pop_size)
         seed = random.randint(0, 10000000)
         for generation in range(self.generations):
-            graded_population = [(self.program_fitness(
+            graded_population = [(self.fitness(
                 individual, seed), individual) for individual in population]
             sorted_population = sorted(graded_population, key=lambda x : x[0])
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
+            print("Generation: " + str(generation) + " Fittest: " + str(sorted_population[0][0]))
             if generation == self.generations - 1:
                 break
             for i in range(self.pop_size):
                 parent = random.sample(new_parents, 2)
-                population[i] = self.program_mutation(
-                    self.program_crossover(parent[0][1], parent[1][1]))
+                population[i] = self.mutation(
+                    self.crossover(parent[0][1], parent[1][1]))
         return sorted_population[0][1]
 
     def hill_climbing(self) -> Callable:
@@ -202,13 +204,11 @@ class ProgramGSGP:
         """
         seed = random.randint(0, 10000000)
         current = ProgramPopulation().create_program_function(self.depth, self.vars)
-        current.fitness = self.program_fitness(current, seed)
-
+        current.fitness = self.fitness(current, seed)
         for i in range(self.generations + 1):
-            offspring = self.program_mutation(current)
-            offspring.fitness = self.program_fitness(offspring, seed)
+            offspring = self.mutation(current)
+            offspring.fitness = self.fitness(offspring, seed)
             if offspring.fitness < current.fitness:
-                print("Change current: " + str(current.fitness) + " -> offspring " +
-                      str(offspring.fitness) + " | " + str(i) + " generations")
                 current = offspring
         return current
+    
