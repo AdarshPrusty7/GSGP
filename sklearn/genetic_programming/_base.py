@@ -43,7 +43,7 @@ def memoize(f: Callable) -> Callable:
 class BooleanPopulation:
     """A class that is used to create a population of Boolean functions."""
 
-    def __create_boolean_expression(self, depth: int, vars: List[str]) -> str:
+    def create_boolean_expression(self, depth: int, vars: List[str]) -> str:
         """Create a random Boolean expression using recursion.
 
         Parameters
@@ -131,7 +131,7 @@ class BooleanPopulation:
 class ArithmeticPopulation:
     """A class that is used to create a population of Arithmetic functions."""
 
-    def __create_arithmetic_expression(self, polynomial_degree: int) -> str:
+    def create_arithmetic_expression(self, polynomial_degree: int) -> str:
         """Create a random arithmetic expression using recursion.
 
         Parameters
@@ -147,7 +147,7 @@ class ArithmeticPopulation:
         Examples
         ------
         >>> ap = ArithmeticPopulation()
-        >>> ap.__create_arithmetic_expression(3)
+        >>> ap.create_arithmetic_expression(3)
         '0.5 * x ** 0 + 0.5 * x ** 1 + 0.5 * x ** 2'        
         """
         expression = ''
@@ -177,7 +177,7 @@ class ArithmeticPopulation:
         >>> af(2)
         2.0
         """
-        expression = self.__create_arithmetic_expression(polynomial_degree)
+        expression = self.create_arithmetic_expression(polynomial_degree)
         # create function of n input variables
         arithmetic_function = eval('lambda x: ' + expression)
         arithmetic_function = memoize(arithmetic_function)  # add cache to the function
@@ -206,13 +206,13 @@ class ArithmeticPopulation:
         >>> population[0](2)
         2.0
         """
-        return [self.create_arithmetic_function(polynomial_degree) for _ in range(polynomial_degree, population_size)]
+        return [self.create_arithmetic_function(polynomial_degree) for _ in range(population_size)]
 
 
 class ProgramPopulation:
     """A class to create a population of random programs."""
 
-    def __create_program_expression(self, depth: int, vars: List[str]) -> str:
+    def create_program_expression(self, depth: int, vars: List[str]) -> str:
         """Create a random program expression using recursion.
 
         Parameters
@@ -236,7 +236,7 @@ class ProgramPopulation:
         if depth == 1 or random.random() < 1.0 / (2 ** depth - 1):
             return random.choice(vars)
         else:
-            return '(' + self.__create_program_expression(depth - 1, vars) + ' if ' + random.choice(['0', '1']) + ' else ' + self.__create_program_expression(depth - 1, vars) + ')'
+            return '(' + self.create_program_expression(depth - 1, vars) + ' if ' + random.choice(['0', '1']) + ' else ' + self.create_program_expression(depth - 1, vars) + ')'
 
     def create_program_function(self, depth: int, vars: List[str]) -> Callable:
         """Create a random program function.
@@ -260,7 +260,7 @@ class ProgramPopulation:
         >>> pf(1, 2, 3)
         2
         """
-        expression = self.__create_program_expression(depth, vars)
+        expression = self.create_program_expression(depth, vars)
         # create function of n input variables
         program_function = eval('lambda ' + ', '.join(vars) + ': ' + expression)
         program_function = memoize(program_function)  # add cache to the function
