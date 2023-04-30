@@ -2,16 +2,25 @@ import pytest
 import sys
 
 
-import _base
+
 
 # We seperate these tests into individual unit tests and whole population tests.
 # UNIT TESTS
 ## Boolean Population
 
-class BooleanPopulation:
-    pass
+def test_memoize():
+    def my_func(a: int, b: int) -> int:
+        return a  * b
+    
+    memoized_func = memoize(my_func)
 
+    # Ensure that calling the memoized function returns the same result atwice
+    assert memoized_func(2, 3) == 6
+    assert memoized_func(2, 3) == 6
 
+    # Ensure that calling the memoized function with different arguments computes and caches the results correctly
+    assert memoized_func(2, 4) == 8
+    assert memoized_func(3, 4) == 12
 
 
 
@@ -29,5 +38,3 @@ prog = ProgramPopulation()
 pop_prog = prog.create_program_population(4, vars, 5)
 print([p.genotype() for p in pop_prog])
 """
-
-test_boolean_population()

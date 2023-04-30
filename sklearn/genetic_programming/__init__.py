@@ -13,7 +13,7 @@ Each module provides a `(Boolean/Arithmetic/Program)GSGP` class for creating and
 This package also includes a `(Boolean/Arithmetic/Program)Population` class for generating populations of random functions, which can be useful for testing and experimentation, however the package will handle this automatically.
 """
 
-import _base
+"""import _base
 import _arithmetic
 import _boolean
 import _program
@@ -24,3 +24,4 @@ __all__ = ['_base',
            '_arithmetic', 
            '_boolean', 
            '_program']
+"""
