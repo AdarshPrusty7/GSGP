@@ -54,7 +54,7 @@ class TestBooleanGSGP:
             return args.count(True) % 2 == 1
         for _ in range(10):
             gp = BooleanGSGP(3, 3, 10, 30, 0.5, target_function)
-            fittest_function = gp.population_evolution()
+            fittest_function = gp.population_evolution()[1]
             assert isinstance(fittest_function, Callable)
             assert isinstance(fittest_function(True, True, True), bool)
             assert isinstance(fittest_function(False, False, False), bool)
@@ -67,7 +67,7 @@ class TestBooleanGSGP:
             return args.count(True) % 2 == 1
         for _ in range(10):
             gp = BooleanGSGP(3, 3, 10, 100, 0.5, target_function)
-            fittest_function = gp.hill_climbing()
+            fittest_function = gp.hill_climbing()[1]
             assert isinstance(fittest_function, Callable)
             assert isinstance(fittest_function.genotype(), str)
             assert isinstance(fittest_function(True, True, True), bool)

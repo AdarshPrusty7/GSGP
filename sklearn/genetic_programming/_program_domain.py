@@ -1,6 +1,6 @@
 import itertools
 import random
-from typing import Callable
+from typing import Callable, Tuple
 
 from _base import ProgramPopulation, memoize
 
@@ -152,11 +152,13 @@ class ProgramGSGP:
                 fitness += 1
         return fitness
 
-    def population_evolution(self) -> Callable:
+    def population_evolution(self) -> Tuple[int, Callable]:
         """The population-based evolution loop. Returns the fittest function in the final population.
 
         Returns
         -------
+        fitness : int
+
         fittest_function : Callable
             The fittest function in the final population.
 
@@ -164,7 +166,7 @@ class ProgramGSGP:
         ------
         >>> pp = ProgramGSGP(3, 3, 2, 3, 100, 2, 0.5, lambda *x: ((args[0] + args[1]) % ncl) + 1)
         >>> pp.create_vars()
-        >>> fittest_function = pp.population_evolution()
+        >>> fittest_function = pp.population_evolution()[1]
         >>> fittest_function.genotype()
         '2 if True else (x0 if True else x1)'
         """
@@ -177,20 +179,21 @@ class ProgramGSGP:
                 individual, seed), individual) for individual in population]
             sorted_population = sorted(graded_population, key=lambda x : x[0])
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
-            print("Generation: " + str(generation) + " Fittest: " + str(sorted_population[0][0]))
             if generation == self.generations - 1:
                 break
             for i in range(self.pop_size):
                 parent = random.sample(new_parents, 2)
                 population[i] = self.mutation(
                     self.crossover(parent[0][1], parent[1][1]))
-        return sorted_population[0][1]
+        return sorted_population[0][0], sorted_population[0][1]
 
-    def hill_climbing(self) -> Callable:
+    def hill_climbing(self) -> Tuple[int, Callable]:
         """The main function for the hill climbing algorithm. Returns the fittest function.
 
         Returns
         -------
+        fitness : int
+
         fittest_function : Callable
             The fittest function.
 
@@ -198,7 +201,7 @@ class ProgramGSGP:
         ------
         >>> pp = ProgramGSGP(3, 3, 2, 3, 100, 2, 0.5, lambda *x: ((args[0] + args[1]) % ncl) + 1)
         >>> pp.create_vars()
-        >>> fittest_function = pp.hill_climbing()
+        >>> fittest_function = pp.hill_climbing()[1]
         >>> fittest_function.genotype()
         '2 if True else (x0 if True else x1)'
         """
@@ -210,5 +213,4 @@ class ProgramGSGP:
             offspring.fitness = self.fitness(offspring, seed)
             if offspring.fitness < current.fitness:
                 current = offspring
-        return current
-    
+        return current.fitness, current

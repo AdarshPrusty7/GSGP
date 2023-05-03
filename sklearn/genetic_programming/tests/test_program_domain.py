@@ -62,20 +62,39 @@ class TestProgramGSGP:
             return ((args[0] + args[1]) % ncl) + 1
         for _ in range(2):
             gp = ProgramGSGP(nc, nv, ncl, 4, 10, 30, 0.5, target_function)
-            fittest_function = gp.population_evolution()
+            fittest_function = gp.population_evolution()[1]
             assert isinstance(fittest_function, Callable)
             assert fittest_function(1, 2, 3) in [1, 2]
 
         nc, nv, ncl = 3, 3, 4
         for _ in range(2):
             gp = ProgramGSGP(nc, nv, ncl, 4, 100, 60, 0.5, target_function)
-            fittest_function = gp.population_evolution()
+            fittest_function = gp.population_evolution()[1]
             assert isinstance(fittest_function, Callable)
             assert fittest_function(1, 2, 3) in [1, 2, 3, 4]
 
         nc, nv, ncl = 3, 3, 8
         for _ in range(2):
             gp = ProgramGSGP(nc, nv, ncl, 4, 100, 120, 0.5, target_function)
-            fittest_function = gp.population_evolution()
+            fittest_function = gp.population_evolution()[1]
+            assert isinstance(fittest_function, Callable)
+            assert fittest_function(1, 2, 3) in [1, 2, 3, 4, 5, 6, 7, 8]
+
+    def test_hill_climbing(self):
+        # Tests the program hill_climbing method.
+        nc, nv, ncl = 3, 3, 4
+
+        def target_function(*args):
+            return ((args[0] + args[1]) % ncl) + 1
+        for _ in range(2):
+            gp = ProgramGSGP(nc, nv, ncl, 4, 10, 30, 0.5, target_function)
+            fittest_function = gp.hill_climbing()[1]
+            assert isinstance(fittest_function, Callable)
+            assert fittest_function(1, 2, 3) in [1, 2, 3, 4]
+
+        nc, nv, ncl = 3, 3, 8
+        for _ in range(2):
+            gp = ProgramGSGP(nc, nv, ncl, 4, 100, 120, 0.5, target_function)
+            fittest_function = gp.hill_climbing()[1]
             assert isinstance(fittest_function, Callable)
             assert fittest_function(1, 2, 3) in [1, 2, 3, 4, 5, 6, 7, 8]

@@ -2,7 +2,7 @@
 
 import itertools
 import random
-from typing import Callable
+from typing import Callable, Tuple
 
 from _base import BooleanPopulation, memoize
 
@@ -141,19 +141,21 @@ class BooleanGSGP:
                 fitness += 1
         return fitness
 
-    def population_evolution(self) -> Callable:
+    def population_evolution(self) -> Tuple[int, Callable]:
         """The population-based evolution loop for the Boolean domain. Returns the fittest function in the final population.
 
 
         Returns
         -------
+        fitness : int
+
         fittest_function : Callable
             The fittest function in the final population.
 
         Examples
         ------
         >>> bp = BooleanGSGP(6, 6, 100, 1, 0.5, lambda x: x)
-        >>> fittest_function = bp.population_evolution()
+        >>> fittest_function = bp.population_evolution()[1]
         >>> fittest_function.genotype()
         '(x0 and (not x1)) or ((not x0) and x1)'
         """
@@ -172,20 +174,22 @@ class BooleanGSGP:
                 parent = random.sample(new_parents, 2)  # picks two random parents
                 population[i] = self.mutation(
                     self.crossover(parent[0][1], parent[1][1]))
-        return sorted_population[0][1]
+        return sorted_population[0][0], sorted_population[0][1]
 
-    def hill_climbing(self) -> Callable:
+    def hill_climbing(self) -> Tuple[int, Callable]:
         """The main function for the hill climbing algorithm. Returns the fittest function.
 
         Returns
         -------
+        fitness : int
+
         fittest_function : Callable
             The fittest function.
 
         Examples
         ------
         >>> bp = BooleanGSGP(6, 6, 100, 1, 0.5, lambda x: x)
-        >>> fittest_function = bp.hill_climbing()
+        >>> fittest_function = bp.hill_climbing()[1]
         >>> fittest_function.genotype()
         '(x0 and (not x1)) or ((not x0) and x1)'
         """
@@ -196,4 +200,4 @@ class BooleanGSGP:
             offspring.fitness = self.fitness(offspring)
             if offspring.fitness < current.fitness:
                 current = offspring
-        return current
+        return current.fitness, current

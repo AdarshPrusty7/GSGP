@@ -2,7 +2,7 @@
 
 import math
 import random
-from typing import Callable
+from typing import Callable, Tuple
 
 from _base import ArithmeticPopulation, memoize
 
@@ -133,17 +133,19 @@ class ArithmeticGSGP:
             fitness += (f_output[i] - target_output[i])**2
         return math.sqrt(fitness)
 
-    def population_evolution(self) -> Callable:
+    def population_evolution(self) -> Tuple[float, Callable]:
         """The population-based evolution loop for the Arithmetic domain. Returns the fittest function in the final population.
 
         Returns
         -------
+        fitness : float
+
         fittest_function : Callable
             The fittest function in the final population.
 
         Examples
         ------
-        >>> fittest_function = real_population_evolution()
+        >>> fittest_function = real_population_evolution()[1]
         >>> fittest_function.genotype()
         '(((x**2 * (0.5 + x**2)) + (x**3 * (1 - (0.5 + x**2)))) + 0.001 * ((x + x**2) - (x + 0.5 * x**2)))'
         """
@@ -165,9 +167,9 @@ class ArithmeticGSGP:
                 population[i] = self.mutation(
                     self.crossover(parent[0][1], parent[1][1]))
 
-        return sorted_population[0][1]
+        return sorted_population[0][0], sorted_population[0][1]
 
-    def hill_climbing(self) -> Callable:
+    def hill_climbing(self) -> Tuple[float, Callable]:
         """Main function for the hill climbing algorithm. Returns the fittest function.
 
         Returns
@@ -177,7 +179,7 @@ class ArithmeticGSGP:
 
         Examples
         ------
-        >>> fittest_function = real_hill_climbing()
+        >>> fittest_function = real_hill_climbing()[1]
         >>> fittest_function.genotype()
         '(((x**2 * (0.5 + x**2)) + (x**3 * (1 - (0.5 + x**2)))) + 0.001 * ((x + x**2) - (x + 0.5 * x**2)))'
         """
@@ -189,4 +191,4 @@ class ArithmeticGSGP:
             offspring.fitness = self.fitness(offspring, seed)
             if offspring.fitness < current.fitness:
                 current = offspring
-        return current
+        return current.fitness, current

@@ -50,7 +50,7 @@ class TestArithmeticGSGP:
         # Tests the real population_evolution method.
         for _ in range(10):
             gp = ArithmeticGSGP(3, 20, 30, 0.5, lambda x: x**2 + 1)
-            fittest_function = gp.population_evolution()
+            fittest_function = gp.population_evolution()[1]
             assert isinstance(fittest_function, Callable)
             assert isinstance(fittest_function(1), float)
 
@@ -58,6 +58,6 @@ class TestArithmeticGSGP:
         # Tests the real hill_climber method.
         for _ in range(10):
             gp = ArithmeticGSGP(3, 20, 400, 0.5, lambda x: x**2 + 1)
-            fittest_function = gp.hill_climbing()
+            fittest_function = gp.hill_climbing()[1]
             assert isinstance(fittest_function, Callable)
             assert isinstance(fittest_function(1), float)
