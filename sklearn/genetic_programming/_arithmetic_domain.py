@@ -160,6 +160,8 @@ class ArithmeticGSGP:
             # print('GENERATION: ' + str(generation + 1) + ' FITNESS: ' + str(self.real_fitness(
             #    sorted_population[0][1], seed)) + ' AVERAGE FITNESS: ' + str(sum(individual[0] for individual in graded_population) / self.pop_size))
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
+            if sorted_population[0][0] == 0:
+                break
             if generation == self.generations - 1:
                 break
             for i in range(self.pop_size):
@@ -191,4 +193,6 @@ class ArithmeticGSGP:
             offspring.fitness = self.fitness(offspring, seed)
             if offspring.fitness < current.fitness:
                 current = offspring
+            if current.fitness == 0:
+                break
         return current.fitness, current

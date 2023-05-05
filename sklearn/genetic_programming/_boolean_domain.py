@@ -168,6 +168,8 @@ class BooleanGSGP:
             # sorted population by its fitness
             sorted_population = sorted(graded_population, key=lambda x : x[0])
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
+            if sorted_population[0][0] == 0:
+                break
             if generation == self.generations - 1:
                 break
             for i in range(self.pop_size):
@@ -200,4 +202,6 @@ class BooleanGSGP:
             offspring.fitness = self.fitness(offspring)
             if offspring.fitness < current.fitness:
                 current = offspring
+            if current.fitness == 0:
+                break            
         return current.fitness, current

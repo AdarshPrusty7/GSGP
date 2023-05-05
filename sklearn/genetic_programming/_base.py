@@ -132,7 +132,7 @@ class ArithmeticPopulation:
     """A class that is used to create a population of Arithmetic functions."""
 
     def create_arithmetic_expression(self, polynomial_degree: int) -> str:
-        """Create a random arithmetic expression using recursion.
+        """Create a random arithmetic expression.
 
         Parameters
         ----------

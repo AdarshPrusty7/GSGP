@@ -12,7 +12,7 @@ class ProgramGSGP:
         Parameters
         ----------
         nc : int
-            1 to nv is the range of values that the variables can take.
+            1 to nc is the range of values that the variables can take.
         nv : int
             The number of variables that the functions will take as input.
         ncl : int
@@ -49,7 +49,7 @@ class ProgramGSGP:
         >>> self.vars
         ['x0', 'x1', 'x2', 'x3', 'x4', 'x5']
         """
-        self.vars = ['x'+str(i) for i in range(self.nc)]
+        self.vars = ['x'+str(i) for i in range(self.nv)]
 
     def crossover(self, f1: Callable, f2: Callable) -> Callable:
         """Crossover operator. Given f1 and f2, offspring is returned in the format of (f1 if condr else f2).
@@ -139,7 +139,7 @@ class ProgramGSGP:
         >>> # This is an ideal case, where the function is equal to the target function.
         """
         generator = random.Random(seed)
-        # Generate list of random Boolean inputs
+        # Generate list of random Program inputs
         fitness = 0
         combination_list = [[generator.randint(1, self.nc), generator.randint(
             1, self.nc), generator.randint(1, self.nc)] for i in range(self.nv)]
@@ -179,6 +179,8 @@ class ProgramGSGP:
                 individual, seed), individual) for individual in population]
             sorted_population = sorted(graded_population, key=lambda x : x[0])
             new_parents = sorted_population[:int(self.trunc*self.pop_size)]
+            if sorted_population[0][0] == 0:
+                break
             if generation == self.generations - 1:
                 break
             for i in range(self.pop_size):
@@ -213,4 +215,6 @@ class ProgramGSGP:
             offspring.fitness = self.fitness(offspring, seed)
             if offspring.fitness < current.fitness:
                 current = offspring
+            if current.fitness == 0:
+                break
         return current.fitness, current
